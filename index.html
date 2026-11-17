@@ -7,116 +7,100 @@
 <title>Démonstration clickjacking — Atelier Rita</title>
 <style>
   :root {
-    --demo: #d7261e;
-    --ink: #1a1a1a;
-    --paper: #f4f1ea;
-    --panel: #fbfaf6;
-    --line: #d9d4c7;
+    --demo: #b0251c;
+    --accent: #111111; /* black: the frame's random colour can't be read cross-origin, so we don't try to match it */
+    --panel: #ffffff;
     --font: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; }
-  body { font-family: var(--font); color: var(--ink); background: var(--paper); }
+  html, body { height: 100%; margin: 0; overflow: hidden; }
+  body { font-family: var(--font); background: #000; }
 
-  /* ---- Unmissable demonstration banner (cannot be dismissed) ---- */
-  .demo-bar {
-    position: sticky; top: 0; z-index: 10000;
-    background: repeating-linear-gradient(45deg, var(--demo) 0 18px, #a81d16 18px 36px);
-    color: #fff; padding: 10px 16px; text-align: center;
-    font-weight: 700; line-height: 1.35; border-bottom: 4px solid #000;
-    font-size: 14px;
-  }
-  .demo-bar small { display: block; font-weight: 500; opacity: .95; }
+  /* Full-bleed framed real site. No page scroll, so no white space below. */
+  iframe#target { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; }
 
-  /* ---- The framed REAL site (fills the viewport, as a real attack would) ---- */
-  .frame-wrap { position: relative; width: 100%; height: calc(100vh - 62px); background: #000; }
-  iframe#target { display: block; width: 100%; height: 100%; border: 0; }
-
-  /* permanent watermark so a screenshot stays labelled even if cropped */
-  .watermark {
-    position: absolute; inset: 0; pointer-events: none; z-index: 20;
-    display: flex; align-items: center; justify-content: center;
-    font-size: clamp(16px, 4vw, 34px); font-weight: 800; letter-spacing: 2px;
-    color: rgba(215, 38, 30, .14); text-transform: uppercase; transform: rotate(-18deg);
+  /* Small fixed demonstration marker (always visible, cannot be scrolled away). */
+  .demo-mark {
+    position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+    z-index: 10000; pointer-events: none;
+    background: var(--demo); color: #fff; font-family: var(--font);
+    font-size: 12px; font-weight: 700; letter-spacing: .4px;
+    padding: 6px 14px; border-radius: 999px; box-shadow: 0 2px 10px rgba(0,0,0,.35);
+    white-space: nowrap;
   }
 
-  /* ---- Newsletter popup, styled to match the site (collects nothing) ---- */
-  .overlay {
-    position: absolute; inset: 0; z-index: 30;
-    background: rgba(20,18,14,.45);
-    display: flex; align-items: center; justify-content: center; padding: 16px;
-  }
-  .overlay[hidden] { display: none; }
+  /* Panel styled like the site's News panel, placed at a random spot by script. */
   .popup {
-    width: 420px; max-width: 100%; background: var(--panel);
-    border: 1px solid var(--line); box-shadow: 0 24px 60px rgba(0,0,0,.35);
-    position: relative;
+    position: fixed; z-index: 30; width: 460px; max-width: calc(100vw - 24px);
+    background: var(--panel); box-shadow: 0 18px 50px rgba(0,0,0,.22);
+    color: var(--accent); font-family: var(--font);
   }
-  .popup .tag {
-    background: var(--demo); color: #fff; font-size: 11px; font-weight: 700;
-    text-align: center; padding: 5px; text-transform: uppercase; letter-spacing: 1px;
+  .popup[hidden] { display: none; }
+  .popup .body { padding: 32px 40px 26px; text-align: center; color: var(--accent); }
+  .popup .label { font-size: 22px; font-weight: 600; letter-spacing: 0; }
+  .popup .lead {
+    margin: 20px 0 0; font-size: 23px; line-height: 1.2; font-weight: 500;
+    letter-spacing: -.2px;
   }
-  .popup .body { padding: 34px 32px 32px; text-align: center; }
-  .popup .brand { font-size: 13px; letter-spacing: 3px; text-transform: uppercase; color: #777; margin-bottom: 18px; }
-  .popup h2 { margin: 0 0 10px; font-size: 24px; font-weight: 500; letter-spacing: .5px; }
-  .popup p { margin: 0 0 24px; font-size: 14px; line-height: 1.6; color: #555; }
-  .popup button {
-    width: 100%; padding: 14px; border: 0; background: var(--ink); color: #fff;
-    font-size: 14px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer;
+  .popup .sub {
+    display: block; width: 100%; margin: 28px 0 0; padding: 0;
+    background: none; border: 0; cursor: pointer; color: var(--accent);
+    font-family: var(--font); font-size: 20px; font-weight: 600; letter-spacing: 0;
   }
-  .popup .close {
-    position: absolute; top: 8px; right: 12px; border: 0; background: none;
-    font-size: 20px; line-height: 1; color: #999; cursor: pointer; padding: 4px;
+  /* letter icon sits where a close button would be; there is no close (scam funnels the click) */
+  .popup .icon-btn {
+    display: block; margin: 24px auto 2px; padding: 0;
+    background: none; border: 0; cursor: pointer; color: var(--accent);
   }
-  .reopen {
-    position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%);
-    z-index: 25; font-size: 13px; background: #fff; border: 1px solid var(--line);
-    padding: 8px 14px; cursor: pointer;
-  }
-  .reopen[hidden] { display: none; }
+  .popup .icon { display: block; width: 46px; height: 46px; }
 </style>
 </head>
 <body>
-  <div class="demo-bar">
-    ⚠️ DÉMONSTRATION DE SÉCURITÉ — CECI N'EST PAS LE VRAI SITE D'ATELIER RITA
-    <small>Page créée pour un audit de sécurité. Le vrai site est chargé ci-dessous dans une page qui ne lui appartient pas. Aucune donnée n'est collectée.</small>
-  </div>
+  <iframe id="target" src="https://www.atelierrita.org" title="Site Atelier Rita chargé en iframe (démonstration)"></iframe>
 
-  <div class="frame-wrap">
-    <div class="watermark">Exemple d'arnaque · Démo</div>
-    <iframe id="target" src="https://www.atelierrita.org" title="Site Atelier Rita chargé en iframe (démonstration)"></iframe>
+  <div class="demo-mark">⚠ Démonstration - pas le vrai site d'Atelier Rita</div>
 
-    <div class="overlay" id="overlay">
-      <div class="popup">
-        <div class="tag">Fenêtre factice — démonstration</div>
-        <button class="close" id="closeBtn" aria-label="Fermer">×</button>
-        <div class="body">
-          <div class="brand">Atelier Rita</div>
-          <h2>Restez informés</h2>
-          <p>Inscrivez-vous à notre newsletter pour suivre les projets de l'atelier.</p>
-          <button type="button" id="subBtn">S'abonner à la newsletter</button>
-        </div>
-      </div>
+  <div class="popup" id="popup" hidden>
+    <div class="body">
+      <div class="label">Newsletter</div>
+      <p class="lead">Inscrivez-vous à notre newsletter pour suivre les projets de l'atelier.</p>
+      <button type="button" class="sub" id="subBtn">S'abonner à la newsletter</button>
+      <button type="button" class="icon-btn" id="iconBtn" aria-label="S'abonner à la newsletter">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <rect x="2.5" y="5" width="19" height="14" rx="1.5" />
+          <path d="M3 6.5l9 6 9-6" />
+        </svg>
+      </button>
     </div>
-
-    <button class="reopen" id="reopenBtn" hidden>Rouvrir la fenêtre de démonstration</button>
   </div>
 
   <script>
-    // The button collects nothing. It only redirects to a harmless link,
-    // to illustrate that a convincing popup over a framed site can send a visitor anywhere.
+    // The button collects nothing; it only redirects to a harmless link, to
+    // illustrate that a convincing popup over a framed site can send a visitor anywhere.
     var YT = "https://www.youtube.com/watch?v=ciqHrJeInBQ";
-    var overlay = document.getElementById("overlay");
-    var reopen = document.getElementById("reopenBtn");
-    document.getElementById("subBtn").addEventListener("click", function () {
-      window.location.href = YT;
-    });
-    document.getElementById("closeBtn").addEventListener("click", function () {
-      overlay.hidden = true; reopen.hidden = false;
-    });
-    reopen.addEventListener("click", function () {
-      overlay.hidden = false; reopen.hidden = true;
-    });
+    var popup = document.getElementById("popup");
+
+    function place() {
+      var pad = 12;
+      var w = popup.offsetWidth, h = popup.offsetHeight;
+      var maxX = Math.max(pad, window.innerWidth - w - pad);
+      var maxY = Math.max(pad, window.innerHeight - h - pad);
+      var minY = 44; // keep clear of the demonstration marker at the top
+      popup.style.left = (pad + Math.random() * (maxX - pad)) + "px";
+      popup.style.top = (minY + Math.random() * (maxY - minY)) + "px";
+    }
+
+    // Show after 0.5s, like the site's own News popup. (The delay does not let us
+    // read the frame's colour: cross-origin reads are blocked regardless of timing.)
+    setTimeout(function () {
+      popup.hidden = false;
+      place();
+    }, 500);
+    window.addEventListener("resize", function () { if (!popup.hidden) place(); });
+
+    function go() { window.location.href = YT; }
+    document.getElementById("subBtn").addEventListener("click", go);
+    document.getElementById("iconBtn").addEventListener("click", go);
   </script>
 </body>
 </html>
