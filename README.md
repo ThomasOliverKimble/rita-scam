@@ -8,7 +8,7 @@ Page de **démonstration** créée pour un audit de sécurité du site
 Le site en ligne ne renvoie aucun en-tête anti-affichage (`X-Frame-Options` ou
 `Content-Security-Policy: frame-ancestors`). Il peut donc être chargé dans le cadre
 (`<iframe>`) de n'importe quelle page. `index.html` charge le vrai site et pose par-dessus
-un faux formulaire « Session expirée » pour illustrer le risque.
+une fausse fenêtre « newsletter » pour illustrer le risque.
 
 ## Garde-fous (ce n'est pas une vraie arnaque)
 

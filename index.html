@@ -8,12 +8,11 @@
 <style>
   :root {
     --demo: #d7261e;
-    --demo-ink: #fff;
-    --ink: #111;
+    --ink: #1a1a1a;
     --paper: #f4f1ea;
-    --panel: #ffffff;
+    --panel: #fbfaf6;
     --line: #d9d4c7;
-    --font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; }
@@ -23,127 +22,100 @@
   .demo-bar {
     position: sticky; top: 0; z-index: 10000;
     background: repeating-linear-gradient(45deg, var(--demo) 0 18px, #a81d16 18px 36px);
-    color: var(--demo-ink);
-    padding: 10px 16px; text-align: center;
-    font-weight: 700; line-height: 1.35;
-    border-bottom: 4px solid #000;
+    color: #fff; padding: 10px 16px; text-align: center;
+    font-weight: 700; line-height: 1.35; border-bottom: 4px solid #000;
+    font-size: 14px;
   }
   .demo-bar small { display: block; font-weight: 500; opacity: .95; }
 
-  .note {
-    max-width: 820px; margin: 16px auto; padding: 0 16px;
-    font-size: 14px; line-height: 1.5; color: #333;
-  }
-  .note code { background: #ece7db; padding: 1px 5px; border-radius: 4px; }
+  /* ---- The framed REAL site (fills the viewport, as a real attack would) ---- */
+  .frame-wrap { position: relative; width: 100%; height: calc(100vh - 62px); background: #000; }
+  iframe#target { display: block; width: 100%; height: 100%; border: 0; }
 
-  /* ---- The framed REAL site (proves the missing anti-frame header) ---- */
-  .stage { position: relative; max-width: 1100px; margin: 0 auto 40px; padding: 0 16px; }
-  .frame-wrap {
-    position: relative; border: 2px dashed var(--demo); border-radius: 8px; overflow: hidden;
-    background: #000;
-  }
-  iframe#target { display: block; width: 100%; height: 640px; border: 0; }
-
-  /* permanent watermark over the frame so a screenshot stays labelled */
+  /* permanent watermark so a screenshot stays labelled even if cropped */
   .watermark {
     position: absolute; inset: 0; pointer-events: none; z-index: 20;
     display: flex; align-items: center; justify-content: center;
-    font-size: clamp(18px, 5vw, 42px); font-weight: 800; letter-spacing: 2px;
-    color: rgba(215, 38, 30, .18); text-transform: uppercase;
-    transform: rotate(-18deg);
+    font-size: clamp(16px, 4vw, 34px); font-weight: 800; letter-spacing: 2px;
+    color: rgba(215, 38, 30, .14); text-transform: uppercase; transform: rotate(-18deg);
   }
 
-  /* ---- The illustrative fake overlay (collects nothing) ---- */
+  /* ---- Newsletter popup, styled to match the site (collects nothing) ---- */
   .overlay {
     position: absolute; inset: 0; z-index: 30;
-    background: rgba(10,10,10,.55);
+    background: rgba(20,18,14,.45);
     display: flex; align-items: center; justify-content: center; padding: 16px;
   }
   .overlay[hidden] { display: none; }
-  .fake-login {
-    width: 340px; max-width: 100%; background: var(--panel);
-    border-radius: 12px; box-shadow: 0 18px 50px rgba(0,0,0,.4);
-    overflow: hidden; border: 1px solid var(--line);
+  .popup {
+    width: 420px; max-width: 100%; background: var(--panel);
+    border: 1px solid var(--line); box-shadow: 0 24px 60px rgba(0,0,0,.35);
+    position: relative;
   }
-  .fake-tag {
+  .popup .tag {
     background: var(--demo); color: #fff; font-size: 11px; font-weight: 700;
     text-align: center; padding: 5px; text-transform: uppercase; letter-spacing: 1px;
   }
-  .fake-body { padding: 20px; }
-  .fake-body h2 { margin: 0 0 4px; font-size: 18px; }
-  .fake-body p { margin: 0 0 16px; font-size: 13px; color: #555; }
-  .fake-body label { display: block; font-size: 12px; color: #555; margin: 10px 0 4px; }
-  .fake-body input {
-    width: 100%; padding: 9px 10px; border: 1px solid var(--line);
-    border-radius: 7px; font-size: 14px; background: #faf8f3;
+  .popup .body { padding: 34px 32px 32px; text-align: center; }
+  .popup .brand { font-size: 13px; letter-spacing: 3px; text-transform: uppercase; color: #777; margin-bottom: 18px; }
+  .popup h2 { margin: 0 0 10px; font-size: 24px; font-weight: 500; letter-spacing: .5px; }
+  .popup p { margin: 0 0 24px; font-size: 14px; line-height: 1.6; color: #555; }
+  .popup button {
+    width: 100%; padding: 14px; border: 0; background: var(--ink); color: #fff;
+    font-size: 14px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer;
   }
-  .fake-body button {
-    margin-top: 16px; width: 100%; padding: 11px; border: 0; border-radius: 7px;
-    background: #111; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer;
+  .popup .close {
+    position: absolute; top: 8px; right: 12px; border: 0; background: none;
+    font-size: 20px; line-height: 1; color: #999; cursor: pointer; padding: 4px;
   }
-  .reset { display: block; margin: 14px auto 40px; font-size: 13px; }
-  .foot { max-width: 820px; margin: 0 auto 60px; padding: 0 16px; font-size: 13px; color: #555; line-height: 1.5; }
+  .reopen {
+    position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%);
+    z-index: 25; font-size: 13px; background: #fff; border: 1px solid var(--line);
+    padding: 8px 14px; cursor: pointer;
+  }
+  .reopen[hidden] { display: none; }
 </style>
 </head>
 <body>
   <div class="demo-bar">
-    ⚠️ DÉMONSTRATION DE SÉCURITÉ — EXEMPLE D'ARNAQUE
-    <small>Cette page n'appartient PAS à Atelier Rita. Elle a été créée pour un audit de sécurité, afin de montrer un risque. Aucune donnée n'est collectée.</small>
+    ⚠️ DÉMONSTRATION DE SÉCURITÉ — CECI N'EST PAS LE VRAI SITE D'ATELIER RITA
+    <small>Page créée pour un audit de sécurité. Le vrai site est chargé ci-dessous dans une page qui ne lui appartient pas. Aucune donnée n'est collectée.</small>
   </div>
 
-  <p class="note">
-    Le site <code>atelierrita.org</code> n'empêche pas d'être affiché dans le cadre
-    (<code>&lt;iframe&gt;</code>) d'une autre page. Ci-dessous, le vrai site est chargé
-    à l'intérieur de cette page qui ne lui appartient pas. Un escroc peut poser par-dessus
-    un faux formulaire, comme celui qui apparaît ici. Le formulaire ci-dessous est
-    <strong>factice</strong> : il n'enregistre rien et renvoie vers une vidéo inoffensive,
-    pour illustrer qu'un clic peut mener n'importe où.
-  </p>
+  <div class="frame-wrap">
+    <div class="watermark">Exemple d'arnaque · Démo</div>
+    <iframe id="target" src="https://www.atelierrita.org" title="Site Atelier Rita chargé en iframe (démonstration)"></iframe>
 
-  <div class="stage">
-    <div class="frame-wrap">
-      <div class="watermark">Exemple d'arnaque · Démo</div>
-      <iframe id="target" src="https://www.atelierrita.org" title="Site Atelier Rita chargé en iframe (démonstration)"></iframe>
-
-      <div class="overlay" id="overlay">
-        <div class="fake-login">
-          <div class="fake-tag">Faux formulaire — démonstration</div>
-          <div class="fake-body">
-            <h2>Session expirée</h2>
-            <p>Reconnectez-vous pour continuer.</p>
-            <label>Adresse e-mail</label>
-            <input type="text" autocomplete="off" placeholder="prenom@exemple.fr" />
-            <label>Mot de passe</label>
-            <input type="password" autocomplete="off" placeholder="••••••••" />
-            <button type="button" id="fakeBtn">Se reconnecter</button>
-          </div>
+    <div class="overlay" id="overlay">
+      <div class="popup">
+        <div class="tag">Fenêtre factice — démonstration</div>
+        <button class="close" id="closeBtn" aria-label="Fermer">×</button>
+        <div class="body">
+          <div class="brand">Atelier Rita</div>
+          <h2>Restez informés</h2>
+          <p>Inscrivez-vous à notre newsletter pour suivre les projets de l'atelier.</p>
+          <button type="button" id="subBtn">S'abonner à la newsletter</button>
         </div>
       </div>
     </div>
-    <a class="reset" href="#" id="resetLink" hidden>↺ Rejouer la démonstration</a>
+
+    <button class="reopen" id="reopenBtn" hidden>Rouvrir la fenêtre de démonstration</button>
   </div>
 
-  <p class="foot">
-    <strong>Ce que ça prouve.</strong> Un site correctement protégé afficherait ici un cadre vide.
-    La correction côté Atelier Rita est un en-tête standard : <code>X-Frame-Options: DENY</code>
-    (ou <code>Content-Security-Policy: frame-ancestors 'none'</code>), qui interdit au site
-    d'être chargé dans le cadre d'une autre page.
-  </p>
-
   <script>
-    // The fake button collects nothing. It only redirects to a harmless link,
-    // to illustrate that a hijacked click can send a visitor anywhere.
+    // The button collects nothing. It only redirects to a harmless link,
+    // to illustrate that a convincing popup over a framed site can send a visitor anywhere.
     var YT = "https://www.youtube.com/watch?v=ciqHrJeInBQ";
-    var btn = document.getElementById("fakeBtn");
     var overlay = document.getElementById("overlay");
-    var resetLink = document.getElementById("resetLink");
-    btn.addEventListener("click", function () {
+    var reopen = document.getElementById("reopenBtn");
+    document.getElementById("subBtn").addEventListener("click", function () {
       window.location.href = YT;
     });
-    // Allow hiding the overlay to inspect the framed site underneath (demo aid).
-    resetLink.addEventListener("click", function (e) {
-      e.preventDefault();
-      overlay.hidden = false;
+    document.getElementById("closeBtn").addEventListener("click", function () {
+      overlay.hidden = true; reopen.hidden = false;
+    });
+    reopen.addEventListener("click", function () {
+      overlay.hidden = false; reopen.hidden = true;
     });
   </script>
 </body>
